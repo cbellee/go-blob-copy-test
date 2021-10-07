@@ -1,0 +1,1 @@
+# go-blob-copy-test
