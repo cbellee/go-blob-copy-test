@@ -1,7 +1,7 @@
 # go-blob-copy-test
 
 # pre-requisites
- - create 2 storage accounts in 2 different regions
+ - create two storage accounts in different regions
  - create a container in each storage account
  - upload a blob to the 'source' storage account container
  - get storage account keys from portal, 'az' cli, Azure PowwrShell, etc.
