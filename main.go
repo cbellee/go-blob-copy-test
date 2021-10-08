@@ -82,6 +82,6 @@ func getBlobSasToken(accountName string, containerName string, blobName string, 
 
 	qp := sasQueryParams.Encode()
 	sasUrl = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s?%s", accountName, containerName, blobName, qp)
-	fmt.Printf("SAS Blob Uri: %s", sasUrl)
+	fmt.Printf("SAS Blob Uri: %s\n", sasUrl)
 	return sasUrl
 }
