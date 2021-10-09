@@ -46,12 +46,12 @@ func main() {
 	sharedCred, _ := azblob.NewSharedKeyCredential(destAccountName, destAccountKey)
 	destBlobURL := azblob.NewBlobURL(*d, azblob.NewPipeline(sharedCred, azblob.PipelineOptions{}))
 
+	// perform blob copy
 	startCopy, err := destBlobURL.StartCopyFromURL(ctx, *s, nil, azblob.ModifiedAccessConditions{}, azblob.BlobAccessConditions{}, azblob.DefaultAccessTier, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// perfrom blob copy
 	copyID := startCopy.CopyID()
 	copyStatus := startCopy.CopyStatus()
 	for copyStatus == azblob.CopyStatusPending {
