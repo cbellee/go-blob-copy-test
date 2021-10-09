@@ -31,41 +31,39 @@ func init() {
 
 func main() {
 	flag.Parse()
+	ctx := context.Background()
 
+	// create source blob SAS url
 	srcCredential, err := azblob.NewSharedKeyCredential(srcAccountName, srcAccountKey)
 	if err != nil {
 		log.Fatal(err)
 	}
 	srcSasTokenUrl := getBlobSasToken(srcAccountName, srcContainerName, blobName, srcCredential, azblob.BlobSASPermissions{Read: true, Add: true, Create: true, Write: true})
-
-	destCredential, err := azblob.NewSharedKeyCredential(destAccountName, destAccountKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-	destSasTokenUrl := getBlobSasToken(destAccountName, destContainerName, blobName, destCredential, azblob.BlobSASPermissions{Read: true, Add: true, Create: true, Write: true})
-
-	ctx := context.Background()
-
 	s, _ := url.Parse(srcSasTokenUrl)
-	d, _ := url.Parse(destSasTokenUrl)
-	destBlobURL := azblob.NewBlobURL(*d, azblob.NewPipeline(azblob.NewAnonymousCredential(), azblob.PipelineOptions{}))
+
+	// create destination account url & shared key credential
+	d, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", destAccountName, destContainerName, blobName))
+	sharedCred, _ := azblob.NewSharedKeyCredential(destAccountName, destAccountKey)
+	destBlobURL := azblob.NewBlobURL(*d, azblob.NewPipeline(sharedCred, azblob.PipelineOptions{}))
 
 	startCopy, err := destBlobURL.StartCopyFromURL(ctx, *s, nil, azblob.ModifiedAccessConditions{}, azblob.BlobAccessConditions{}, azblob.DefaultAccessTier, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// perfrom blob copy
 	copyID := startCopy.CopyID()
 	copyStatus := startCopy.CopyStatus()
 	for copyStatus == azblob.CopyStatusPending {
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Millisecond * 500)
 		getMetadata, err := destBlobURL.GetProperties(ctx, azblob.BlobAccessConditions{}, azblob.ClientProvidedKeyOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
 		copyStatus = getMetadata.CopyStatus()
+		fmt.Printf("Copy Status: %s \nCopy ID: %s\n", copyStatus, copyID)
 	}
-	fmt.Printf("Copy from %s to %s: ID=%s, Status=%s\n", s.String(), destBlobURL, copyID, copyStatus)
+	fmt.Printf("Successfully copied blob from %s to %s", s.String(), destBlobURL)
 }
 
 func getBlobSasToken(accountName string, containerName string, blobName string, credential azblob.StorageAccountCredential, blobPermissions azblob.BlobSASPermissions) (sasUrl string) {
